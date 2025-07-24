@@ -1,15 +1,18 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 
 export default function SignUp() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [message, setMessage] = useState('')
+
+  const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const endpoint = 'http://localhost:4000/sign-up'
+    const endpoint = 'http://localhost:5014/users/sign-up'
 
     try {
       const response = await fetch(endpoint, {
@@ -18,19 +21,17 @@ export default function SignUp() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to sign up')
+        throw new Error('Failed to sign up');
       }
 
       const data = await response.json()
-      setMessage('Signup successful!')
 
-      setUsername('')
-      setPassword('')
+      navigate('/userhome', { state: { username } })
     } catch (error) {
-      setMessage(error.message);
+      setMessage(error.message)
     }
   }
 
@@ -74,5 +75,5 @@ export default function SignUp() {
         )}
       </form>
     </div>
-  );
+  )
 }
