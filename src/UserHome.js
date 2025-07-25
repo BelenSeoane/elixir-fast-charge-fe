@@ -10,6 +10,7 @@ export default function UserHome() {
   const [showForm, setShowForm] = useState(false)
   const [preferences, setPreferences] = useState([])
   const [showPreferences, setShowPreferences] = useState(false)
+  const [stations, setStations] = useState([])
 
   const [formData, setFormData] = useState({
     location: '',
@@ -23,7 +24,22 @@ export default function UserHome() {
       { id: 1, station: 'Station A', time: '2025-08-01T10:00:00', power: '50kW' },
       { id: 2, station: 'Station B', time: '2025-08-01T14:00:00', power: '22kW' },
     ];
-    setAppointments(dummyAppointments);
+    setAppointments(dummyAppointments)
+  }, [])
+
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        const response = await fetch('http://localhost:5014/stations')
+        if (!response.ok) throw new Error('Failed to fetch stations')
+        const data = await response.json()
+        setStations(data)
+      } catch (error) {
+        console.error('Error fetching stations:', error)
+      }
+    }
+
+    fetchStations()
   }, [])
 
   const handleFormSubmit = async (e) => {
@@ -108,13 +124,19 @@ export default function UserHome() {
           <h2 className="text-xl font-semibold mb-4">Create a Preference</h2>
 
           <label className="block mb-1 font-medium">Station</label>
-          <input
-            type="text"
+          <select
             required
             className="w-full mb-3 p-2 border rounded"
             value={formData.station_id}
             onChange={(e) => setFormData({ ...formData, station_id: e.target.value })}
-          />
+          >
+            <option value="">Select a station</option>
+            {stations.stations.map((station) => (
+              <option key={station.station_id} value={station.station_id}>
+                {station.station_id}
+              </option>
+            ))}
+          </select>
 
           <label className="block mb-1 font-medium">Connector Type</label>
           <input
@@ -135,13 +157,19 @@ export default function UserHome() {
           />
 
           <label className="block mb-1 font-medium">Location</label>
-          <input
-            type="text"
+          <select
             required
             className="w-full mb-3 p-2 border rounded"
             value={formData.location}
             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-          />
+          >
+            <option value="">Select a location</option>
+            {stations.stations.map((station) => (
+              <option key={station.station_id} value={station.location.address}>
+                {station.location.address}
+              </option>
+            ))}
+          </select>
 
           <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
             Submit
