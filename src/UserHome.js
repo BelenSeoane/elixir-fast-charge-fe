@@ -11,6 +11,8 @@ export default function UserHome() {
   const [preferences, setPreferences] = useState([])
   const [showPreferences, setShowPreferences] = useState(false)
   const [stations, setStations] = useState([])
+  const [connectorTypes, setConnectorTypes] = useState([])
+  const [powerLevels, setPowerLevels] = useState([])
 
   const [formData, setFormData] = useState({
     location: '',
@@ -34,6 +36,19 @@ export default function UserHome() {
         if (!response.ok) throw new Error('Failed to fetch stations')
         const data = await response.json()
         setStations(data)
+
+        const connectorSet = new Set()
+        const powerSet = new Set()
+
+        data.stations.forEach((station) => {
+          station.charging_points.forEach((point) => {
+            connectorSet.add(point.connector_type)
+            powerSet.add(point.power_kw)
+          })
+        })
+
+        setConnectorTypes(Array.from(connectorSet))
+        setPowerLevels(Array.from(powerSet).sort((a, b) => a - b))
       } catch (error) {
         console.error('Error fetching stations:', error)
       }
@@ -125,7 +140,6 @@ export default function UserHome() {
 
           <label className="block mb-1 font-medium">Station</label>
           <select
-            required
             className="w-full mb-3 p-2 border rounded"
             value={formData.station_id}
             onChange={(e) => setFormData({ ...formData, station_id: e.target.value })}
@@ -139,26 +153,35 @@ export default function UserHome() {
           </select>
 
           <label className="block mb-1 font-medium">Connector Type</label>
-          <input
-            type="text"
-            required
+          <select
             className="w-full mb-3 p-2 border rounded"
             value={formData.connector_type}
             onChange={(e) => setFormData({ ...formData, connector_type: e.target.value })}
-          />
+          >
+            <option value="">Select a connector</option>
+            {connectorTypes.map((type) => (
+              <option key={type} value={type}>
+                {type.toUpperCase()}
+              </option>
+            ))}
+          </select>
 
           <label className="block mb-1 font-medium">Power</label>
-          <input
-            type="text"
-            required
+          <select
             className="w-full mb-3 p-2 border rounded"
             value={formData.power}
             onChange={(e) => setFormData({ ...formData, power: e.target.value })}
-          />
+          >
+            <option value="">Select power</option>
+            {powerLevels.map((kw) => (
+              <option key={kw} value={kw}>
+                {kw} kW
+              </option>
+            ))}
+          </select>
 
           <label className="block mb-1 font-medium">Location</label>
           <select
-            required
             className="w-full mb-3 p-2 border rounded"
             value={formData.location}
             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
