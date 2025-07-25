@@ -154,8 +154,48 @@ export default function UserHome() {
           <h2 className="text-xl font-semibold mb-2">Your Preferences</h2>
           <ul className="space-y-2">
             {preferences.map((pref, index) => (
-              <li key={index} className="bg-white p-3 rounded shadow">
-                ⛽ Station {pref.station_id} | 🔌 Connector Type {pref.connector_type} | ⚡ Power {pref.power} | 📍 Location {pref.location}  
+              <li key={index} className="bg-white p-3 rounded shadow flex items-center justify-between">
+                <div>
+                  ⛽ Station {pref.station_id} | 🔌 Connector Type {pref.connector_type} | ⚡ Power {pref.power} | 📍 Location {pref.location}
+                </div>
+
+                <label className="inline-flex items-center cursor-pointer ml-4">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={pref.alert}
+                    onChange={async (e) => {
+                      const updatedStatus = e.target.checked
+
+                      try {
+                        const res = await fetch(`http://localhost:5014/users/alert`, {
+                          method: 'PUT',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            username: username,
+                            preference_id: pref.preference_id,
+                            alert: updatedStatus
+                          }),
+                        });
+
+                        if (!res.ok) throw new Error('Failed to update preference')
+
+                        setPreferences((prev) =>
+                          prev.map((p, i) =>
+                            i === index ? { ...p, alert: updatedStatus } : p
+                          )
+                        )
+                      } catch (err) {
+                        alert(err.message)
+                      }
+                    }}
+                  />
+                  <div className="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full relative transition-all duration-300">
+                    <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 peer-checked:translate-x-full transition-transform duration-300"></div>
+                  </div>
+                </label>
               </li>
             ))}
           </ul>
