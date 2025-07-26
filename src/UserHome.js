@@ -13,6 +13,22 @@ export default function UserHome() {
   const [stations, setStations] = useState([])
   const [connectorTypes, setConnectorTypes] = useState([])
   const [powerLevels, setPowerLevels] = useState([])
+  const [selectedAppointment, setSelectedAppointment] = useState(null)
+  const [countdown, setCountdown] = useState(60)
+  const [timerActive, setTimerActive] = useState(false)
+
+  useEffect(() => {
+    if (timerActive && countdown > 0) {
+      const interval = setInterval(() => {
+        setCountdown((prev) => prev - 1)
+      }, 1000)
+
+      return () => clearInterval(interval)
+    } else if (countdown === 0) {
+      setSelectedAppointment(null)
+      setTimerActive(false)
+    }
+  }, [timerActive, countdown])
 
   const [formData, setFormData] = useState({
     location: '',
@@ -272,12 +288,57 @@ export default function UserHome() {
             <p className="text-gray-700 mb-1">🔌Connector Type: {appt.connector_type} </p>
             <p className="text-gray-700 mb-1">⚡Power: {appt.power}</p>
             <p className="text-gray-700 mb-4">📍Location: {appt.location}</p>
-            <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition">
+            <button
+              className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
+              onClick={() => {
+                setSelectedAppointment(appt)
+                setCountdown(60)
+                setTimerActive(true)
+              }}
+            >
               Select
             </button>
           </div>
         ))}
       </div>
+
+      {selectedAppointment && (
+        <div className="mt-6 p-4 border rounded-lg shadow bg-yellow-50">
+          <h2 className="text-lg font-semibold mb-2">Confirm Reservation</h2>
+          <p className="mb-2 text-gray-700">
+            ⏳ Time left to reserve: <span className="font-bold">{countdown}s</span>
+          </p>
+          <p className="mb-2 text-gray-700">
+            🔌 Connector: {selectedAppointment.connector_type}
+          </p>
+          <p className="mb-4 text-gray-700">
+            ⚡ Power: {selectedAppointment.power}
+          </p>
+
+          <button
+            onClick={async () => {
+              try {
+                const res = await fetch(`http://localhost:5014/shifts/${selectedAppointment.id}/reserve`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ user_id: username })
+                })
+
+                if (res.ok) {
+                  alert("Shift reserved!")
+                } else {
+                  alert("Failed to reserve shift.")
+                }
+              } catch (error) {
+                console.error("Error reserving shift:", error)
+              }
+            }}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          >
+            Reserve
+          </button>
+        </div>
+      )}
 
     </div>
   )
