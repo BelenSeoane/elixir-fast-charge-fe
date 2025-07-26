@@ -20,13 +20,28 @@ export default function UserHome() {
     timeWindow: '',
   })
 
-  // Dummy appointments
   useEffect(() => {
-    const dummyAppointments = [
-      { id: 1, station: 'Station A', time: '2025-08-01T10:00:00', power: '50kW' },
-      { id: 2, station: 'Station B', time: '2025-08-01T14:00:00', power: '22kW' },
-    ];
-    setAppointments(dummyAppointments)
+    async function fetchShifts() {
+      try {
+        const res = await fetch(`http://localhost:5014/users/${username}/shifts`)
+        const data = await res.json()
+        setAppointments(
+          Object.values(data.shifts).map((shift) => ({
+            id: shift.shift_id,
+            station: shift.station_id,
+            start_time: shift.start_time,
+            end_time: shift.end_time,
+            power: `${shift.power_kw}kW`,
+            connector_type: shift.connector_type,
+            location: shift.location
+          }))
+        )
+      } catch (error) {
+        console.error('Error fetching appointments:', error)
+      }
+    }
+
+    fetchShifts()
   }, [])
 
   useEffect(() => {
@@ -121,12 +136,6 @@ export default function UserHome() {
           onClick={handleSeePreferences}
         >
           See Preferences
-        </button>
-
-        <button
-          className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition"
-        >
-          See Alerts
         </button>
 
       </div>
@@ -258,15 +267,18 @@ export default function UserHome() {
           <div key={appt.id} className="bg-white rounded-lg shadow p-4">
             <h2 className="text-xl font-semibold mb-2">⛽ {appt.station}</h2>
             <p className="text-gray-700 mb-1">
-              ⏰ Time: {new Date(appt.time).toLocaleString()}
+              ⏰ Time: {new Date(appt.start_time).toLocaleString()} - {new Date(appt.end_time).toLocaleString()}
             </p>
-            <p className="text-gray-700 mb-4">⚡ Power: {appt.power}</p>
+            <p className="text-gray-700 mb-1">🔌Connector Type: {appt.connector_type} </p>
+            <p className="text-gray-700 mb-1">⚡Power: {appt.power}</p>
+            <p className="text-gray-700 mb-4">📍Location: {appt.location}</p>
             <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition">
-              Reserve
+              Select
             </button>
           </div>
         ))}
       </div>
+
     </div>
   )
 }
