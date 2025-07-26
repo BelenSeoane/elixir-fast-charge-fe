@@ -143,14 +143,14 @@ export default function UserHome() {
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
           onClick={() => setShowForm((prev) => !prev)}
         >
-          Create Preference
+          Create preference
         </button>
 
         <button
           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
           onClick={handleSeePreferences}
         >
-          See Preferences
+          See preferences
         </button>
 
       </div>
@@ -176,7 +176,7 @@ export default function UserHome() {
             ))}
           </select>
 
-          <label className="block mb-1 font-medium">Connector Type</label>
+          <label className="block mb-1 font-medium">Connector type</label>
           <select
             className="w-full mb-3 p-2 border rounded"
             value={formData.connector_type}
@@ -231,7 +231,12 @@ export default function UserHome() {
             {preferences.map((pref, index) => (
               <li key={index} className="bg-white p-3 rounded shadow flex items-center justify-between">
                 <div>
-                  ⛽ Station {pref.station_id} | 🔌 Connector Type {pref.connector_type} | ⚡ Power {pref.power}kW | 📍 Location {pref.location}
+                  {[
+                    pref.station_id && `⛽ Station ${pref.station_id}`,
+                    pref.connector_type && `🔌 Connector type ${pref.connector_type}`,
+                    pref.power_kw && `⚡ Power ${pref.power_kw}kW`,
+                    pref.location && `📍 Location ${pref.location}`
+                  ].filter(Boolean).join(' | ')}
                 </div>
 
                 <label className="inline-flex items-center cursor-pointer ml-4">
@@ -284,7 +289,7 @@ export default function UserHome() {
             <p className="text-gray-700 mb-1">
               ⏰ Time: {new Date(appt.start_time).toLocaleString()} - {new Date(appt.end_time).toLocaleString()}
             </p>
-            <p className="text-gray-700 mb-1">🔌Connector Type: {appt.connector_type} </p>
+            <p className="text-gray-700 mb-1">🔌Connector type: {appt.connector_type} </p>
             <p className="text-gray-700 mb-1">⚡Power: {appt.power_kw}kW</p>
             <p className="text-gray-700 mb-4">📍Location: {appt.location}</p>
             <button
