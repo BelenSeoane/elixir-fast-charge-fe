@@ -17,6 +17,7 @@ export default function UserHome() {
   const [countdown, setCountdown] = useState(60)
   const [timerActive, setTimerActive] = useState(false)
   const [createdNewPreference, setCreatedNewPreference] = useState(false)
+  const [preReservationId, setPreReservationId] = useState(false)
 
   useEffect(() => {
     if (timerActive && countdown > 0) {
@@ -40,7 +41,7 @@ export default function UserHome() {
         const data = await res.json()
         setAppointments(
           Object.values(data.shifts).map((shift) => ({
-            id: shift.shift_id,
+            shift_id: shift.shift_id,
             station: shift.station_id,
             start_time: shift.start_time,
             end_time: shift.end_time,
@@ -226,7 +227,7 @@ export default function UserHome() {
 
       {showPreferences && preferences.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-2">Your Preferences</h2>
+          <h2 className="text-xl font-semibold mb-2">Your preferences</h2>
           <ul className="space-y-2">
             {preferences.map((pref, index) => (
               <li key={index} className="bg-white p-3 rounded shadow flex items-center justify-between">
@@ -284,7 +285,7 @@ export default function UserHome() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {appointments.map((appt) => (
-          <div key={appt.id} className="bg-white rounded-lg shadow p-4">
+          <div key={appt.shift_id} className={`bg-white rounded-lg shadow p-4 border-2 ${selectedAppointment?.shift_id == appt.shift_id ? " border-blue-700" : "border-transparent"}`}>
             <h2 className="text-xl font-semibold mb-2">⛽ {appt.station}</h2>
             <p className="text-gray-700 mb-1">
               ⏰ Time: {new Date(appt.start_time).toLocaleString()} - {new Date(appt.end_time).toLocaleString()}
@@ -294,10 +295,34 @@ export default function UserHome() {
             <p className="text-gray-700 mb-4">📍Location: {appt.location}</p>
             <button
               className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
-              onClick={() => {
+              onClick={async () => {
                 setSelectedAppointment(appt)
-                setCountdown(60)
-                setTimerActive(true)
+
+                console.log(appt)
+
+                try {
+                  const res = await fetch(`http://localhost:5014/shifts/pre-reservations`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      shift_id: appt.shift_id,
+                      user_id: username,
+                    }),
+                  })
+
+                  const preReservationResp = await res.json()
+
+                  setPreReservationId(preReservationResp.pre_reservation.pre_reservation_id)
+
+                  if (!timerActive) {
+                    setCountdown(60)
+                    setTimerActive(true)
+                  }
+                } catch (error) {
+                  console.error('Error selecting shift:', error)
+                }
               }}
             >
               Select
@@ -316,24 +341,30 @@ export default function UserHome() {
 
       {selectedAppointment && (
         <div className="mt-6 p-4 border rounded-lg shadow bg-yellow-50">
-          <h2 className="text-lg font-semibold mb-2">Confirm Reservation</h2>
+          <h2 className="text-lg font-semibold mb-2">Confirm reservation</h2>
           <p className="mb-2 text-gray-700">
             ⏳ Time left to reserve: <span className="font-bold">{countdown}s</span>
           </p>
           <p className="mb-2 text-gray-700">
+            ⛽ Station: {selectedAppointment.station}
+          </p>
+          <p className="mb-2 text-gray-700">
             🔌 Connector: {selectedAppointment.connector_type}
           </p>
+          <p className="mb-2 text-gray-700">
+            ⚡ Power: {selectedAppointment.power_kw}kW
+          </p>
           <p className="mb-4 text-gray-700">
-            ⚡ Power: {selectedAppointment.power}
+            📍Location: {selectedAppointment.location}
           </p>
 
           <button
             onClick={async () => {
               try {
-                const res = await fetch(`http://localhost:5014/shifts/${selectedAppointment.id}/reserve`, {
+                const res = await fetch(`http://localhost:5014/shifts/pre-reservations/${preReservationId}/confirm`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ user_id: username })
+                  // body: JSON.stringify({ user_id: username })
                 })
 
                 if (res.ok) {
