@@ -16,6 +16,7 @@ export default function UserHome() {
   const [selectedAppointment, setSelectedAppointment] = useState(null)
   const [countdown, setCountdown] = useState(60)
   const [timerActive, setTimerActive] = useState(false)
+  const [createdNewPreference, setCreatedNewPreference] = useState(false)
 
   useEffect(() => {
     if (timerActive && countdown > 0) {
@@ -30,11 +31,7 @@ export default function UserHome() {
     }
   }, [timerActive, countdown])
 
-  const [formData, setFormData] = useState({
-    location: '',
-    power: '',
-    timeWindow: '',
-  })
+  const [formData, setFormData] = useState({})
 
   useEffect(() => {
     async function fetchShifts() {
@@ -47,9 +44,10 @@ export default function UserHome() {
             station: shift.station_id,
             start_time: shift.start_time,
             end_time: shift.end_time,
-            power: `${shift.power_kw}kW`,
+            power_kw: shift.power_kw,
             connector_type: shift.connector_type,
-            location: shift.location
+            location: shift.location,
+            matching_preferences_count: shift.matching_preferences_count
           }))
         )
       } catch (error) {
@@ -58,7 +56,7 @@ export default function UserHome() {
     }
 
     fetchShifts()
-  }, [])
+  }, [createdNewPreference])
 
   useEffect(() => {
     const fetchStations = async () => {
@@ -108,11 +106,12 @@ export default function UserHome() {
         username: username,
         station_id: "",
         connector_type: "",
-        power: "",
+        power_kw: 0,
         location: "",
       })
       setShowForm(false)
       alert('Preference created!')
+      setCreatedNewPreference(true)
     } catch (err) {
       alert(err.message)
     }
@@ -195,7 +194,7 @@ export default function UserHome() {
           <select
             className="w-full mb-3 p-2 border rounded"
             value={formData.power}
-            onChange={(e) => setFormData({ ...formData, power: e.target.value })}
+            onChange={(e) => setFormData({ ...formData, power_kw: parseInt(e.target.value) })}
           >
             <option value="">Select power</option>
             {powerLevels.map((kw) => (
@@ -232,7 +231,7 @@ export default function UserHome() {
             {preferences.map((pref, index) => (
               <li key={index} className="bg-white p-3 rounded shadow flex items-center justify-between">
                 <div>
-                  ⛽ Station {pref.station_id} | 🔌 Connector Type {pref.connector_type} | ⚡ Power {pref.power} | 📍 Location {pref.location}
+                  ⛽ Station {pref.station_id} | 🔌 Connector Type {pref.connector_type} | ⚡ Power {pref.power}kW | 📍 Location {pref.location}
                 </div>
 
                 <label className="inline-flex items-center cursor-pointer ml-4">
@@ -286,7 +285,7 @@ export default function UserHome() {
               ⏰ Time: {new Date(appt.start_time).toLocaleString()} - {new Date(appt.end_time).toLocaleString()}
             </p>
             <p className="text-gray-700 mb-1">🔌Connector Type: {appt.connector_type} </p>
-            <p className="text-gray-700 mb-1">⚡Power: {appt.power}</p>
+            <p className="text-gray-700 mb-1">⚡Power: {appt.power_kw}kW</p>
             <p className="text-gray-700 mb-4">📍Location: {appt.location}</p>
             <button
               className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
@@ -298,6 +297,14 @@ export default function UserHome() {
             >
               Select
             </button>
+            <div className='text-sm italic mt-3'>
+              {
+                (appt.matching_preferences_count > 0) ? 
+                <p className="text-green-700 mb-1"> Matches {appt.matching_preferences_count} of your preferences</p> 
+                :
+                <p className="text-red-700 mb-1">No matching preferences</p>
+              }
+            </div>
           </div>
         ))}
       </div>
