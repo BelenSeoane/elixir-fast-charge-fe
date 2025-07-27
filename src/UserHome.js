@@ -17,6 +17,8 @@ export default function UserHome() {
   const [countdown, setCountdown] = useState(60)
   const [timerActive, setTimerActive] = useState(false)
   const [createdNewPreference, setCreatedNewPreference] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [showNotifications, setShowNotifications] = useState(false)
 
   useEffect(() => {
     if (timerActive && countdown > 0) {
@@ -41,6 +43,7 @@ export default function UserHome() {
         setAppointments(
           Object.values(data.shifts).map((shift) => ({
             id: shift.shift_id,
+            point_id: shift.point_id,
             station: shift.station_id,
             start_time: shift.start_time,
             end_time: shift.end_time,
@@ -133,6 +136,28 @@ export default function UserHome() {
     }
   }
 
+  const handleNotifications = async () => {
+    if (showNotifications) {
+      setShowNotifications(false)
+      return
+    }
+
+    // Otherwise, fetch and show notifications
+    const endpoint = `http://localhost:5014/users/${username}/notifications`
+
+    try {
+      const res = await fetch(endpoint);
+      if (!res.ok) throw new Error('Failed to fetch notifications')
+
+      const data = await res.json()
+      console.log(data)
+      setNotifications(data.notifications || [])
+      setShowNotifications(true)
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <h1 className="text-3xl font-bold mb-4">Welcome, {username}!</h1>
@@ -151,6 +176,13 @@ export default function UserHome() {
           onClick={handleSeePreferences}
         >
           See preferences
+        </button>
+
+        <button
+          className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 transition"
+          onClick={handleNotifications}
+        >
+          Notifications
         </button>
 
       </div>
@@ -282,6 +314,32 @@ export default function UserHome() {
         </div>
       )}
 
+      {showNotifications && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Notifications</h2>
+          {notifications.length > 0 ? (
+            <div className="space-y-3">
+              {notifications.map((notification, index) => (
+                <div key={index} className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r shadow">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <span className="text-orange-400 text-xl">🔔</span>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-orange-800">{notification}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 p-4 rounded text-center">
+              <p className="text-gray-600">No notifications available</p>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {appointments.map((appt) => (
           <div key={appt.id} className="bg-white rounded-lg shadow p-4">
@@ -289,6 +347,7 @@ export default function UserHome() {
             <p className="text-gray-700 mb-1">
               ⏰ Time: {new Date(appt.start_time).toLocaleString()} - {new Date(appt.end_time).toLocaleString()}
             </p>
+            <p className="text-gray-700 mb-1">🔗 Point: {appt.point_id}</p>
             <p className="text-gray-700 mb-1">🔌Connector type: {appt.connector_type} </p>
             <p className="text-gray-700 mb-1">⚡Power: {appt.power_kw}kW</p>
             <p className="text-gray-700 mb-4">📍Location: {appt.location}</p>
