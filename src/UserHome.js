@@ -31,6 +31,7 @@ export default function UserHome() {
     } else if (countdown === 0) {
       setSelectedAppointment(null)
       setTimerActive(false)
+      setPreReservationId(null) 
     }
   }, [timerActive, countdown])
 
@@ -372,24 +373,39 @@ export default function UserHome() {
                 console.log(appt)
 
                 try {
-                  const res = await fetch(`http://localhost:5014/shifts/pre-reservations`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      shift_id: appt.shift_id,
-                      user_id: username,
-                    }),
-                  })
+                  if (!preReservationId) {
+                    const res = await fetch(`http://localhost:5014/shifts/pre-reservations`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        shift_id: appt.shift_id,
+                        user_id: username,
+                      }),
+                    })
 
-                  const preReservationResp = await res.json()
+                    const preReservationResp = await res.json()
+                    setPreReservationId(preReservationResp.pre_reservation.pre_reservation_id)
 
-                  setPreReservationId(preReservationResp.pre_reservation.pre_reservation_id)
-
-                  if (!timerActive) {
                     setCountdown(60)
                     setTimerActive(true)
+                  } else {
+                    const res = await fetch(`http://localhost:5014/shifts/pre-reservations`, {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        pre_reservation_id: preReservationId,
+                        shift_id: appt.shift_id,
+                        user_id: username,
+                      }),
+                    })
+
+                    if (!res.ok) {
+                      throw new Error('Failed to update pre-reservation')
+                    }
                   }
                 } catch (error) {
                   console.error('Error selecting shift:', error)
@@ -435,11 +451,13 @@ export default function UserHome() {
                 const res = await fetch(`http://localhost:5014/shifts/pre-reservations/${preReservationId}/confirm`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  // body: JSON.stringify({ user_id: username })
                 })
 
                 if (res.ok) {
                   alert("Shift reserved!")
+                  setSelectedAppointment(null)
+                  setTimerActive(false)
+                  setPreReservationId(null)
                 } else {
                   alert("Failed to reserve shift.")
                 }
