@@ -19,6 +19,7 @@ export default function UserHome() {
   const [createdNewPreference, setCreatedNewPreference] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [showNotifications, setShowNotifications] = useState(false)
+  const [preReservationId, setPreReservationId] = useState(false)
 
   useEffect(() => {
     if (timerActive && countdown > 0) {
@@ -42,7 +43,7 @@ export default function UserHome() {
         const data = await res.json()
         setAppointments(
           Object.values(data.shifts).map((shift) => ({
-            id: shift.shift_id,
+            shift_id: shift.shift_id,
             point_id: shift.point_id,
             station: shift.station_id,
             start_time: shift.start_time,
@@ -121,6 +122,12 @@ export default function UserHome() {
   }
 
   const handleSeePreferences = async () => {
+    if (showPreferences) {
+      setShowPreferences(false)
+      return
+    }
+
+    // Otherwise, fetch and show preferences
     const endpoint = `http://localhost:5014/users/${username}/preferences`
 
     try {
@@ -256,61 +263,67 @@ export default function UserHome() {
         </form>
       )}
 
-      {showPreferences && preferences.length > 0 && (
+      {showPreferences && (
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-2">Your Preferences</h2>
-          <ul className="space-y-2">
-            {preferences.map((pref, index) => (
-              <li key={index} className="bg-white p-3 rounded shadow flex items-center justify-between">
-                <div>
-                  {[
-                    pref.station_id && `⛽ Station ${pref.station_id}`,
-                    pref.connector_type && `🔌 Connector type ${pref.connector_type}`,
-                    pref.power_kw && `⚡ Power ${pref.power_kw}kW`,
-                    pref.location && `📍 Location ${pref.location}`
-                  ].filter(Boolean).join(' | ')}
-                </div>
-
-                <label className="inline-flex items-center cursor-pointer ml-4">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={pref.alert}
-                    onChange={async (e) => {
-                      const updatedStatus = e.target.checked
-
-                      try {
-                        const res = await fetch(`http://localhost:5014/users/alert`, {
-                          method: 'PUT',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({
-                            username: username,
-                            preference_id: pref.preference_id,
-                            alert: updatedStatus
-                          }),
-                        });
-
-                        if (!res.ok) throw new Error('Failed to update preference')
-
-                        setPreferences((prev) =>
-                          prev.map((p, i) =>
-                            i === index ? { ...p, alert: updatedStatus } : p
-                          )
-                        )
-                      } catch (err) {
-                        alert(err.message)
-                      }
-                    }}
-                  />
-                  <div className="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full relative transition-all duration-300">
-                    <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 peer-checked:translate-x-full transition-transform duration-300"></div>
+          <h2 className="text-xl font-semibold mb-2">Your preferences</h2>
+          {preferences.length > 0 ? (
+            <ul className="space-y-2">
+              {preferences.map((pref, index) => (
+                <li key={index} className="bg-white p-3 rounded shadow flex items-center justify-between">
+                  <div>
+                    {[
+                      pref.station_id && `⛽ Station ${pref.station_id}`,
+                      pref.connector_type && `🔌 Connector type ${pref.connector_type}`,
+                      pref.power_kw && `⚡ Power ${pref.power_kw}kW`,
+                      pref.location && `📍 Location ${pref.location}`
+                    ].filter(Boolean).join(' | ')}
                   </div>
-                </label>
-              </li>
-            ))}
-          </ul>
+
+                  <label className="inline-flex items-center cursor-pointer ml-4">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={pref.alert}
+                      onChange={async (e) => {
+                        const updatedStatus = e.target.checked
+
+                        try {
+                          const res = await fetch(`http://localhost:5014/users/alert`, {
+                            method: 'PUT',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              username: username,
+                              preference_id: pref.preference_id,
+                              alert: updatedStatus
+                            }),
+                          });
+
+                          if (!res.ok) throw new Error('Failed to update preference')
+
+                          setPreferences((prev) =>
+                            prev.map((p, i) =>
+                              i === index ? { ...p, alert: updatedStatus } : p
+                            )
+                          )
+                        } catch (err) {
+                          alert(err.message)
+                        }
+                      }}
+                    />
+                    <div className="w-11 h-6 bg-gray-300 peer-checked:bg-green-500 rounded-full relative transition-all duration-300">
+                      <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 peer-checked:translate-x-full transition-transform duration-300"></div>
+                    </div>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 p-4 rounded text-center">
+              <p className="text-gray-600">No preferences available</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -342,7 +355,7 @@ export default function UserHome() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {appointments.map((appt) => (
-          <div key={appt.id} className="bg-white rounded-lg shadow p-4">
+          <div key={appt.shift_id} className={`bg-white rounded-lg shadow p-4 border-2 ${selectedAppointment?.shift_id == appt.shift_id ? " border-blue-700" : "border-transparent"}`}>
             <h2 className="text-xl font-semibold mb-2">⛽ {appt.station}</h2>
             <p className="text-gray-700 mb-1">
               ⏰ Time: {new Date(appt.start_time).toLocaleString()} - {new Date(appt.end_time).toLocaleString()}
@@ -353,10 +366,34 @@ export default function UserHome() {
             <p className="text-gray-700 mb-4">📍Location: {appt.location}</p>
             <button
               className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
-              onClick={() => {
+              onClick={async () => {
                 setSelectedAppointment(appt)
-                setCountdown(60)
-                setTimerActive(true)
+
+                console.log(appt)
+
+                try {
+                  const res = await fetch(`http://localhost:5014/shifts/pre-reservations`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      shift_id: appt.shift_id,
+                      user_id: username,
+                    }),
+                  })
+
+                  const preReservationResp = await res.json()
+
+                  setPreReservationId(preReservationResp.pre_reservation.pre_reservation_id)
+
+                  if (!timerActive) {
+                    setCountdown(60)
+                    setTimerActive(true)
+                  }
+                } catch (error) {
+                  console.error('Error selecting shift:', error)
+                }
               }}
             >
               Select
@@ -375,24 +412,30 @@ export default function UserHome() {
 
       {selectedAppointment && (
         <div className="mt-6 p-4 border rounded-lg shadow bg-yellow-50">
-          <h2 className="text-lg font-semibold mb-2">Confirm Reservation</h2>
+          <h2 className="text-lg font-semibold mb-2">Confirm reservation</h2>
           <p className="mb-2 text-gray-700">
             ⏳ Time left to reserve: <span className="font-bold">{countdown}s</span>
           </p>
           <p className="mb-2 text-gray-700">
+            ⛽ Station: {selectedAppointment.station}
+          </p>
+          <p className="mb-2 text-gray-700">
             🔌 Connector: {selectedAppointment.connector_type}
           </p>
+          <p className="mb-2 text-gray-700">
+            ⚡ Power: {selectedAppointment.power_kw}kW
+          </p>
           <p className="mb-4 text-gray-700">
-            ⚡ Power: {selectedAppointment.power}
+            📍Location: {selectedAppointment.location}
           </p>
 
           <button
             onClick={async () => {
               try {
-                const res = await fetch(`http://localhost:5014/shifts/${selectedAppointment.id}/reserve`, {
+                const res = await fetch(`http://localhost:5014/shifts/pre-reservations/${preReservationId}/confirm`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ user_id: username })
+                  // body: JSON.stringify({ user_id: username })
                 })
 
                 if (res.ok) {
