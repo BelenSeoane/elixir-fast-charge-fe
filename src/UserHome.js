@@ -19,6 +19,8 @@ export default function UserHome() {
   const [createdNewPreference, setCreatedNewPreference] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [showNotifications, setShowNotifications] = useState(false)
+  const [reservations, setReservations] = useState([])
+  const [showReservations, setShowReservations] = useState(false)
   const [preReservationId, setPreReservationId] = useState(false)
 
   useEffect(() => {
@@ -166,6 +168,27 @@ export default function UserHome() {
     }
   }
 
+  const handleReservations = async () => {
+    if (showReservations) {
+      setShowReservations(false)
+      return
+    }
+
+    const endpoint = `http://localhost:5014/shifts/pre-reservations/user/${username}`
+
+    try {
+      const res = await fetch(endpoint);
+      if (!res.ok) throw new Error('Failed to fetch reservations')
+
+      const data = await res.json()
+      console.log(data)
+      setReservations(data.pre_reservations || [])
+      setShowReservations(true)
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <h1 className="text-3xl font-bold mb-4">Welcome, {username}!</h1>
@@ -191,6 +214,13 @@ export default function UserHome() {
           onClick={handleNotifications}
         >
           Notifications
+        </button>
+
+        <button
+          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"
+          onClick={handleReservations}
+        >
+          Reservations
         </button>
 
       </div>
@@ -354,8 +384,47 @@ export default function UserHome() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {appointments.map((appt) => (
+      {showReservations && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Reservations</h2>
+          {reservations.length > 0 ? (
+            <div className="space-y-3">
+              {reservations.map((reservation, index) => (
+                <div key={index} className="bg-purple-50 border-l-4 border-purple-400 p-4 rounded-r shadow">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <span className="text-purple-400 text-xl">📋</span>
+                    </div>
+                    <div className="ml-3">
+                      <div className="text-purple-800">
+                        <p className="font-semibold mb-1">
+                          Status: <span className={`${reservation.status === 'confirmed' ? 'text-green-600' : 'text-yellow-600'}`}>
+                            {reservation.status}
+                          </span>
+                        </p>
+                        <p className="text-sm mb-1">🔗 Shift: {reservation.shift_id}</p>
+                        <p className="text-sm mb-1">📅 Created: {new Date(reservation.created_at).toLocaleString()}</p>
+                        {reservation.confirmed_at && (
+                          <p className="text-sm mb-1">✅ Confirmed: {new Date(reservation.confirmed_at).toLocaleString()}</p>
+                        )}
+                        <p className="text-sm">⏰ Expires: {new Date(reservation.expires_at).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 p-4 rounded text-center">
+              <p className="text-gray-600">No reservations available</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {appointments.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {appointments.map((appt) => (
           <div key={appt.shift_id} className={`bg-white rounded-lg shadow p-4 border-2 ${selectedAppointment?.shift_id == appt.shift_id ? " border-blue-700" : "border-transparent"}`}>
             <h2 className="text-xl font-semibold mb-2">⛽ {appt.station}</h2>
             <p className="text-gray-700 mb-1">
@@ -424,7 +493,14 @@ export default function UserHome() {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      ) : (
+        <div className="bg-gray-50 border border-gray-200 p-8 rounded text-center">
+          <div className="text-gray-400 text-6xl mb-4">⛽</div>
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">No shifts available</h3>
+          <p className="text-gray-600">There are currently no shifts available. Please check back later.</p>
+        </div>
+      )}
 
       {selectedAppointment && (
         <div className="mt-6 p-4 border rounded-lg shadow bg-yellow-50">
