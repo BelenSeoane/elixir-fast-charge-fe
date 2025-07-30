@@ -43,7 +43,7 @@ export default function SignUp() {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded shadow-md w-full max-w-sm"
       >
-        <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">Sign up</h2>
 
         <label className="block mb-2 font-medium">Username</label>
         <input
@@ -69,7 +69,7 @@ export default function SignUp() {
           type="submit"
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
         >
-          Sign Up
+          Sign up
         </button>
 
         {message && (

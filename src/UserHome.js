@@ -176,7 +176,7 @@ export default function UserHome() {
       return
     }
 
-    const endpoint = `http://localhost:5014/shifts/pre-reservations/user/${username}`
+    const endpoint = `${getRandomBackendUrl()}/shifts/pre-reservations/user/${username}`
 
     try {
       const res = await fetch(endpoint);
