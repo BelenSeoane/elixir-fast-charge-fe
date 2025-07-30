@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { getRandomBackendUrl } from './App'
+
 
 export default function SignUp() {
   const [username, setUsername] = useState('')
@@ -12,7 +14,7 @@ export default function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const endpoint = 'http://localhost:5014/users/sign-up'
+    const endpoint = `${getRandomBackendUrl()}/users/sign-up`
 
     try {
       const response = await fetch(endpoint, {

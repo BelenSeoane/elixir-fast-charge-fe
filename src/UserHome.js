@@ -1,6 +1,8 @@
 import { useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 
+import { getRandomBackendUrl } from './App'
+
 
 export default function UserHome() {
   const location = useLocation()
@@ -40,7 +42,7 @@ export default function UserHome() {
   useEffect(() => {
     async function fetchShifts() {
       try {
-        const res = await fetch(`http://localhost:5014/users/${username}/shifts`)
+        const res = await fetch(`${getRandomBackendUrl()}/users/${username}/shifts`)
         const data = await res.json()
         setAppointments(
           Object.values(data.shifts).map((shift) => ({
@@ -66,7 +68,7 @@ export default function UserHome() {
   useEffect(() => {
     const fetchStations = async () => {
       try {
-        const response = await fetch('http://localhost:5014/stations')
+        const response = await fetch(`${getRandomBackendUrl()}/stations`)
         if (!response.ok) throw new Error('Failed to fetch stations')
         const data = await response.json()
         setStations(data)
@@ -94,7 +96,7 @@ export default function UserHome() {
   const handleFormSubmit = async (e) => {
     e.preventDefault()
 
-    const endpoint = 'http://localhost:5014/users/preferences'
+    const endpoint = `${getRandomBackendUrl()}/users/preferences`
 
     try {
       const response = await fetch(endpoint, {
@@ -129,7 +131,7 @@ export default function UserHome() {
     }
 
     // Otherwise, fetch and show preferences
-    const endpoint = `http://localhost:5014/users/${username}/preferences`
+    const endpoint = `${getRandomBackendUrl()}/users/${username}/preferences`
 
     try {
       const res = await fetch(endpoint);
@@ -151,7 +153,7 @@ export default function UserHome() {
     }
 
     // Otherwise, fetch and show notifications
-    const endpoint = `http://localhost:5014/users/${username}/notifications`
+    const endpoint = `${getRandomBackendUrl()}/users/${username}/notifications`
 
     try {
       const res = await fetch(endpoint);
@@ -289,7 +291,7 @@ export default function UserHome() {
                         const updatedStatus = e.target.checked
 
                         try {
-                          const res = await fetch(`http://localhost:5014/users/alert`, {
+                          const res = await fetch(`${getRandomBackendUrl()}/users/alert`, {
                             method: 'PUT',
                             headers: {
                               'Content-Type': 'application/json',
@@ -374,7 +376,7 @@ export default function UserHome() {
 
                 try {
                   if (!preReservationId) {
-                    const res = await fetch(`http://localhost:5014/shifts/pre-reservations`, {
+                    const res = await fetch(`${getRandomBackendUrl()}/shifts/pre-reservations`, {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
@@ -391,7 +393,7 @@ export default function UserHome() {
                     setCountdown(60)
                     setTimerActive(true)
                   } else {
-                    const res = await fetch(`http://localhost:5014/shifts/pre-reservations`, {
+                    const res = await fetch(`${getRandomBackendUrl()}/shifts/pre-reservations`, {
                       method: 'PUT',
                       headers: {
                         'Content-Type': 'application/json',
@@ -448,7 +450,7 @@ export default function UserHome() {
           <button
             onClick={async () => {
               try {
-                const res = await fetch(`http://localhost:5014/shifts/pre-reservations/${preReservationId}/confirm`, {
+                const res = await fetch(`${getRandomBackendUrl()}/shifts/pre-reservations/${preReservationId}/confirm`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                 })
