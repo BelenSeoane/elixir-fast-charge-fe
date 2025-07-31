@@ -65,7 +65,7 @@ export default function UserHome() {
     }
 
     fetchShifts()
-  }, [createdNewPreference])
+  }, [createdNewPreference, selectedAppointment])
 
   useEffect(() => {
     const fetchStations = async () => {
@@ -538,6 +538,9 @@ export default function UserHome() {
                   setPreReservationId(null)
                 } else {
                   alert("Failed to reserve shift.")
+                  setSelectedAppointment(null)
+                  setTimerActive(false)
+                  setPreReservationId(null)
                 }
               } catch (error) {
                 console.error("Error reserving shift:", error)
