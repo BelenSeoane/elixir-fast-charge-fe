@@ -225,6 +225,33 @@ export default function UserHome() {
           Reservations
         </button>
 
+        <button
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+          onClick={async () => {
+            try {
+              const res = await fetch(`${getRandomBackendUrl()}/users/${username}/shifts`)
+              const data = await res.json()
+              setAppointments(
+                Object.values(data.shifts).map((shift) => ({
+                  shift_id: shift.shift_id,
+                  point_id: shift.point_id,
+                  station: shift.station_id,
+                  start_time: shift.start_time,
+                  end_time: shift.end_time,
+                  power_kw: shift.power_kw,
+                  connector_type: shift.connector_type,
+                  location: shift.location,
+                  matching_preferences_count: shift.matching_preferences_count
+                }))
+              )
+            } catch (error) {
+              console.error('Error fetching appointments:', error)
+            }
+          }}
+        >
+          Refresh shifts
+        </button>
+
       </div>
 
       {showForm && (
